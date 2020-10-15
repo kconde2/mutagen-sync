@@ -1,0 +1,36 @@
+# Set up the Docker Compose services before creating sessions.
+beforeCreate:
+  - docker-compose up --build --detach
+
+# Tear down the Docker Compose services after terminating sessions.
+afterTerminate:
+  - docker-compose down --rmi=local --volumes
+
+# Define common utility commands.
+commands:
+  ipython: docker-compose exec jupyter ipython
+
+sync:
+    defaults:
+      ignore:
+        vcs: true
+        paths:
+          - .DS_Store
+          - .history
+          - .idea
+    mutagen:
+      alpha: "app"
+      beta: "docker://mutagen-sync-apache/var/www/html"
+      mode: "two-way-resolved"
+      configurationBeta:
+        permissions:
+          defaultFileMode: 644
+          defaultDirectoryMode: 755
+        #   defaultOwner: "root"
+        #   defaultGroup: "root"
+      # Example of optimisation (not required by default)
+      ignore:
+        paths:
+            - "mutagen.yml"
+            - "mutagen.yml.lock"
+            - ".vagrant"

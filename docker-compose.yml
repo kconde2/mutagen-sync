@@ -1,0 +1,52 @@
+version: "3.7"
+
+volumes:
+    mutagen:
+
+services:
+    traefik:
+        image: "traefik:v2.3"
+        command:
+            - "--log.level=DEBUG"
+            - "--api.insecure=true"
+            # Enabling docker provider
+            - "--providers.docker=true"
+              # Do not expose containers unless explicitly told so
+            - "--providers.docker.exposedbydefault=false"
+            - "--entrypoints.web.address=:80"
+        networks:
+            - proxy
+        ports:
+            - "80:80"
+            - "8080:8080"
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.traefik.entrypoints=web"
+            - "traefik.http.routers.traefik.rule=Host(`t.localhost`)"
+            - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+        volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+    apache:
+        build:
+            context: ./docker/apache
+            dockerfile: Dockerfile
+        container_name: mutagen-sync-apache
+        networks:
+            - proxy
+        volumes:
+            - ./docker/apache/apache2.conf:/etc/apache2/conf-enabled/apache2.conf:ro
+            - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+            #- ./app:/var/www/html:cached
+            ## Alternative for macOS users: mutagen https://wodby.com/docs/stacks/php/local#docker-for-mac
+            - mutagen:/var/www/html
+        expose:
+            - 80
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.apache.rule=Host(`localhost`)"
+            - "traefik.http.routers.apache.entrypoints=web"
+
+networks:
+    proxy:
+        external: false

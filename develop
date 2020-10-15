@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+COMPOSE="docker-compose -f docker-compose.yml"
+
+if [ $# -gt 0 ]; then
+    if [ "$1" = "up" ]; then
+        shift 1
+        #$COMPOSE up "$@" -d
+
+        mutagen project terminate -f mutagen.yml
+        mutagen project start -f mutagen.yml
+    elif [ "$1" = "down" ]; then
+        mutagen project terminate -f mutagen.yml
+    fi
+fi
+
+# In my project this file is called 'develop' and I use it like this...
+
+# ./develop up # starts containers and mutagen sync
+# ./develop down
